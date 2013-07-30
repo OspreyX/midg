@@ -1,6 +1,7 @@
 /*******************************************************************************
  * File: Midg_II.cpp
  * Auth: Chris Bessent <cmbq76>
+ * Modified by: Jeff Schmidt <jeff-o>, Clearpath Robotics <clearpathrobotics>
  *
  * Desc: Midg controller.  Parses data from Midg and posts to "Midg" topic.
  ******************************************************************************/
@@ -23,6 +24,11 @@
 #include <list>
 #include "Math.h"
 #include "drivers/midgPacket.h"
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <vector>
+#include <sstream>
 
 /***********************************************************
 * Global variables
@@ -31,6 +37,7 @@ double avg_mag_x = 0;
 double avg_mag_y = 0;
 double heading = 0;
 double reading_count = 0;
+string port_name;
 
 // sensor_msgs::NavSatFix
 const bool FIX_COVARIANCE = false;
@@ -57,6 +64,9 @@ int main(int argc, char **argv)
     ros::Publisher navSatFix_pub = n.advertise<sensor_msgs::NavSatFix>( "/fix", 1000 );
     navSatFix_msg.header.frame_id = "midg_link";
 
+    // Grab the port name from the launch file.
+    n.param<std::string>("port", port_name, "/dev/ttyUSB0");
+
     /***********************************************************
     * Midg initialization
     ***********************************************************/
@@ -81,8 +91,8 @@ int Open_MIDG_Connection()
     int fd;
     struct termios newtio;
 
-    fd = open("/dev/ttyUSB1", O_RDWR | O_NOCTTY | O_NONBLOCK );
-    if (fd <0) {perror("/dev/ttyUSB1"); exit(-1); }
+    fd = open(port_name.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK );
+    if (fd <0) {perror(port_name.c_str()); exit(-1); }
 
     memset( &newtio, 0x00, sizeof(newtio) );
 
