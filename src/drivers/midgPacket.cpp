@@ -134,7 +134,6 @@ return (fbuf.first == cksum0) && (fbuf.second == cksum1);
 }
 
 
-//DOCUMENTATION!!?!?!??!
 /*
 So, what follows is going to be pretty complex.
 Each packet contains differing message information,

@@ -1,10 +1,39 @@
-/*******************************************************************************
- * File: Midg_II.cpp
- * Auth: Chris Bessent <cmbq76>
- * Modified by: Jeff Schmidt <jeff-o>, Clearpath Robotics <clearpathrobotics>
+/**
  *
- * Desc: Midg controller.  Parses data from Midg and posts to "Midg" topic.
- ******************************************************************************/
+ *  \file	Midg_II.cpp
+ *  \brief      Microbotics Midg II controller.
+ *              Parses data from Midg and posts to Midg, Imu and GPS (fix)
+ *              topics.
+ *  \author     Chris Bessent <cmbq76>
+ *  \author     Jeff Schmidt <jschmidt@clearpathrobotics.com>
+ *  \license	BSD
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in the
+ *       documentation and/or other materials provided with the distribution.
+ *     * Neither the name of Clearpath Robotics, Inc. nor the
+ *       names of its contributors may be used to endorse or promote products
+ *       derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL CLEARPATH ROBOTICS, INC. BE LIABLE FOR ANY
+ * DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * 
+ * Please send comments, questions, or patches to code@clearpathrobotics.com 
+ *
+ */
+
 
 /***********************************************************
 * ROS specific includes
@@ -68,6 +97,8 @@ int main(int argc, char **argv)
     ros::Publisher midgimu_pub = n.advertise<midg::IMU>( "/midg/midg", 1000 );
     ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>( "/midg/imu", 1000 );
     ros::Publisher navSatFix_pub = n.advertise<sensor_msgs::NavSatFix>( "/midg/fix", 1000 );
+    imu_msg.header.frame_id = "imu_link";
+    
     navSatFix_msg.header.frame_id = "midg_link";
 
     // Grab the port name from the launch file.
@@ -82,6 +113,8 @@ int main(int argc, char **argv)
     {
 //        ROS_DEBUG("Midg alive!");
         Process_MIDG_Packets( fd );
+
+        imu_msg.header.stamp = ros::Time::now();
 
         midgimu_pub.publish( midgimu_msg );
         imu_pub.publish( imu_msg );
@@ -271,17 +304,20 @@ void Process_MIDG_Packets( int fd )
             //~ midgimu_msg.heading = msg_navsense.yaw;
             midgimu_msg.angular_rate = msg_navsense.zAngRate;
 
-            imu_msg.angular_velocity.x = msg_navsense.xAngRate;
-            imu_msg.angular_velocity.y = msg_navsense.yAngRate;
-            imu_msg.angular_velocity.z = msg_navsense.zAngRate;
+            // Convert from NED to ENU, and publish
+            imu_msg.angular_velocity.x = -( msg_navsense.yAngRate ); // convert from left-hand to right-hand rule
+            imu_msg.angular_velocity.y = msg_navsense.xAngRate;
+            imu_msg.angular_velocity.z = -( msg_navsense.zAngRate );
 
-            imu_msg.linear_acceleration.x = msg_navsense.xAccel / g;
-            imu_msg.linear_acceleration.y = msg_navsense.yAccel / g;
-            imu_msg.linear_acceleration.z = msg_navsense.zAccel / g;
+            // Convert from NED to ENU, and publish
+            imu_msg.linear_acceleration.x = msg_navsense.yAccel / g;
+            imu_msg.linear_acceleration.y = msg_navsense.xAccel / g;
+            imu_msg.linear_acceleration.z = -( msg_navsense.zAccel / g );
 
-            imu_msg.orientation.x = msg_navsense.Qx;
-            imu_msg.orientation.y = msg_navsense.Qy;
-            imu_msg.orientation.z = msg_navsense.Qz;
+            // Convert from NED to ENU, and publish
+            imu_msg.orientation.x = msg_navsense.Qy;
+            imu_msg.orientation.y = msg_navsense.Qx;
+            imu_msg.orientation.z = -( msg_navsense.Qz );
             imu_msg.orientation.w = msg_navsense.Qw;
 
 
