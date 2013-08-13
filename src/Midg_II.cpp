@@ -84,7 +84,7 @@ void Process_MIDG_Packets( int );
 /***********************************************************
 * Message Callbacks
 ***********************************************************/
-midg::IMU           midgimu_msg;
+midg::IMU               midgimu_msg;
 sensor_msgs::Imu	imu_msg;
 sensor_msgs::NavSatFix  navSatFix_msg;
 
@@ -182,7 +182,6 @@ void Process_MIDG_Packets( int fd )
             }
             else
             {
-                //ROS_INFO("AAAAAAA");
 		if( GPSPV_LONG_DATA.size() >= sample_size )
                 {
                     GPSPV_LONG_DATA.pop_front();

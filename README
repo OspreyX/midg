@@ -3,3 +3,9 @@ Jomegratron_IGVC package, available from here at this writing:
 
 
 https://github.com/MST-Robotics/Jomegatron_IGVC
+
+
+The launch file will spawn three topics, Imu, fix and Midg.  Imu and fix are standard ROS 
+sensor message format, while Midg is not.  Note that the output from Imu has been
+transformed as per REP 103 (http://www.ros.org/reps/rep-0103.html#id7) to comply with
+standard ROS convention.
