@@ -260,12 +260,29 @@ void Process_MIDG_Packets( int fd )
             //~ }
 
             //------------------------------------------------------
-            // Modify angular rate for robot system
+            // Modify angular rate for robot system (convert to radians)
             //------------------------------------------------------
+            msg_navsense.xAngRate *= M_PI/180.;
+            msg_navsense.yAngRate *= M_PI/180.;
             msg_navsense.zAngRate *= M_PI/180.;
 
-            //~ midgimu_msg.heading        = msg_navsense.yaw;
-            midgimu_msg.angular_rate       = msg_navsense.zAngRate;
+            //~ midgimu_msg.heading = msg_navsense.yaw;
+            midgimu_msg.angular_rate = msg_navsense.zAngRate;
+
+            imu_msg.angular_velocity.x = msg_navsense.xAngRate;
+            imu_msg.angular_velocity.y = msg_navsense.yAngRate;
+            imu_msg.angular_velocity.z = msg_navsense.zAngRate;
+
+            imu_msg.linear_acceleration.x = msg_navsense.xAccel;
+            imu_msg.linear_acceleration.y = msg_navsense.yAccel;
+            imu_msg.linear_acceleration.z = msg_navsense.zAccel;
+
+            imu_msg.orientation.x = msg_navsense.Qx;
+            imu_msg.orientation.y = msg_navsense.Qy;
+            imu_msg.orientation.z = msg_navsense.Qz;
+            imu_msg.orientation.w = msg_navsense.Qw;
+
+
             break;
 
         case MIDG_MESSAGE_UTCTIME:
