@@ -44,6 +44,8 @@ string port_name;
 const bool FIX_COVARIANCE = false;
 const double FIXED_COVARIANCE_VALUE = 5000;
 
+const double g = 9.799096177;
+
 /***********************************************************
 * Function prototypes
 ***********************************************************/
@@ -273,9 +275,9 @@ void Process_MIDG_Packets( int fd )
             imu_msg.angular_velocity.y = msg_navsense.yAngRate;
             imu_msg.angular_velocity.z = msg_navsense.zAngRate;
 
-            imu_msg.linear_acceleration.x = msg_navsense.xAccel;
-            imu_msg.linear_acceleration.y = msg_navsense.yAccel;
-            imu_msg.linear_acceleration.z = msg_navsense.zAccel;
+            imu_msg.linear_acceleration.x = msg_navsense.xAccel / g;
+            imu_msg.linear_acceleration.y = msg_navsense.yAccel / g;
+            imu_msg.linear_acceleration.z = msg_navsense.zAccel / g;
 
             imu_msg.orientation.x = msg_navsense.Qx;
             imu_msg.orientation.y = msg_navsense.Qy;
