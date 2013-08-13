@@ -14,7 +14,8 @@
 /***********************************************************
 * Message includes
 ***********************************************************/
-#include "mst_midg/IMU.h"
+#include "midg/IMU.h"
+#include "sensor_msgs/Imu.h"
 #include "sensor_msgs/NavSatFix.h"
 
 /***********************************************************
@@ -52,16 +53,19 @@ void Process_MIDG_Packets( int );
 /***********************************************************
 * Message Callbacks
 ***********************************************************/
-mst_midg::IMU           imu_msg;
+midg::IMU           midgimu_msg;
+sensor_msgs::Imu	imu_msg;
 sensor_msgs::NavSatFix  navSatFix_msg;
+
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "Midg");
     ros::NodeHandle n;
 
-    ros::Publisher imu_pub = n.advertise<mst_midg::IMU>( "/midg", 1000 );
-    ros::Publisher navSatFix_pub = n.advertise<sensor_msgs::NavSatFix>( "/fix", 1000 );
+    ros::Publisher midgimu_pub = n.advertise<midg::IMU>( "/midg/midg", 1000 );
+    ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>( "/midg/imu", 1000 );
+    ros::Publisher navSatFix_pub = n.advertise<sensor_msgs::NavSatFix>( "/midg/fix", 1000 );
     navSatFix_msg.header.frame_id = "midg_link";
 
     // Grab the port name from the launch file.
@@ -74,9 +78,10 @@ int main(int argc, char **argv)
 
     while( ros::ok() )
     {
-//        ROS_INFO("Midg alive!");
+//        ROS_DEBUG("Midg alive!");
         Process_MIDG_Packets( fd );
 
+        midgimu_pub.publish( midgimu_msg );
         imu_pub.publish( imu_msg );
         navSatFix_pub.publish( navSatFix_msg );
     }
@@ -136,20 +141,21 @@ void Process_MIDG_Packets( int fd )
 
             if( !msg_navpv.positionvalid )
             {
-                imu_msg.position_valid = false;
+                midgimu_msg.position_valid = false;
                 for(int i=0; i<9; ++i)
                     navSatFix_msg.position_covariance[i] = 0;
             }
             else
             {
                 //ROS_INFO("AAAAAAA");
-				if( GPSPV_LONG_DATA.size() >= sample_size )
+		if( GPSPV_LONG_DATA.size() >= sample_size )
                 {
                     GPSPV_LONG_DATA.pop_front();
                 }
+
                 GPSPV_LONG_DATA.push_back( msg_navpv.xPos );
-                imu_msg.longitude = average( GPSPV_LONG_DATA );
-                navSatFix_msg.longitude = imu_msg.longitude;
+                midgimu_msg.longitude = average( GPSPV_LONG_DATA );
+                navSatFix_msg.longitude = midgimu_msg.longitude;
 
                 if( GPSPV_LAT_DATA.size() >= sample_size )
                 {
@@ -157,12 +163,12 @@ void Process_MIDG_Packets( int fd )
                 }
                 GPSPV_LAT_DATA.push_back( msg_navpv.yPos );
                 
-                //imu_msg.heading = atan2( GPSPV_LAT_DATA.back() - GPSPV_LAT_DATA.front(), GPSPV_LONG_DATA.back() - GPSPV_LONG_DATA.front() );
+                //midgimu_msg.heading = atan2( GPSPV_LAT_DATA.back() - GPSPV_LAT_DATA.front(), GPSPV_LONG_DATA.back() - GPSPV_LONG_DATA.front() );
 
-                imu_msg.longitude = msg_navpv.xPos;
-                imu_msg.latitude  = msg_navpv.yPos;
-                imu_msg.altitude  = msg_navpv.zPos;
-                imu_msg.position_valid = true;
+                midgimu_msg.longitude = msg_navpv.xPos;
+                midgimu_msg.latitude  = msg_navpv.yPos;
+                midgimu_msg.altitude  = msg_navpv.zPos;
+                midgimu_msg.position_valid = true;
                 
                 navSatFix_msg.longitude = msg_navpv.xPos;
                 navSatFix_msg.latitude  = msg_navpv.yPos;
@@ -179,11 +185,11 @@ void Process_MIDG_Packets( int fd )
 
             if( !msg_gpspv.gpsfixvalid )
             {
-                imu_msg.position_valid = false;
+                midgimu_msg.position_valid = false;
                 for(int i=0; i<9; ++i)
                     navSatFix_msg.position_covariance[i] = 0;
-                imu_msg.heading_valid = false;
-                imu_msg.position_accuracy = msg_gpspv.positionaccuracy;
+                midgimu_msg.heading_valid = false;
+                midgimu_msg.position_accuracy = msg_gpspv.positionaccuracy;
             }
             else
             {
@@ -195,24 +201,24 @@ void Process_MIDG_Packets( int fd )
                     GPSPV_LONG_DATA.pop_front();
                 }
                 GPSPV_LONG_DATA.push_back( msg_gpspv.GPS_PosX );
-                imu_msg.longitude = average( GPSPV_LONG_DATA );
-                navSatFix_msg.longitude = imu_msg.longitude;
+                midgimu_msg.longitude = average( GPSPV_LONG_DATA );
+                navSatFix_msg.longitude = midgimu_msg.longitude;
 
                 if( GPSPV_LAT_DATA.size() >= sample_size )
                 {
                     GPSPV_LAT_DATA.pop_front();
                 }
                 GPSPV_LAT_DATA.push_back( msg_gpspv.GPS_PosY );
-                imu_msg.latitude = average( GPSPV_LAT_DATA );
-                navSatFix_msg.latitude = imu_msg.latitude;
+                midgimu_msg.latitude = average( GPSPV_LAT_DATA );
+                navSatFix_msg.latitude = midgimu_msg.latitude;
 
-		//imu_msg.heading = atan2( GPSPV_LAT_DATA.back() - GPSPV_LAT_DATA.front(), GPSPV_LONG_DATA.back() - GPSPV_LONG_DATA.front() );
+		//midgimu_msg.heading = atan2( GPSPV_LAT_DATA.back() - GPSPV_LAT_DATA.front(), GPSPV_LONG_DATA.back() - GPSPV_LONG_DATA.front() );
 
-                imu_msg.longitude = msg_gpspv.GPS_PosX;
-                imu_msg.latitude  = msg_gpspv.GPS_PosY;
-                imu_msg.altitude  = msg_gpspv.GPS_PosZ;
-                imu_msg.position_valid = true;
-                imu_msg.position_accuracy = msg_gpspv.positionaccuracy;
+                midgimu_msg.longitude = msg_gpspv.GPS_PosX;
+                midgimu_msg.latitude  = msg_gpspv.GPS_PosY;
+                midgimu_msg.altitude  = msg_gpspv.GPS_PosZ;
+                midgimu_msg.position_valid = true;
+                midgimu_msg.position_accuracy = msg_gpspv.positionaccuracy;
                 
                 navSatFix_msg.longitude = msg_gpspv.GPS_PosX;
                 navSatFix_msg.latitude  = msg_gpspv.GPS_PosY;
@@ -258,16 +264,16 @@ void Process_MIDG_Packets( int fd )
             //------------------------------------------------------
             msg_navsense.zAngRate *= M_PI/180.;
 
-            //~ imu_msg.heading        = msg_navsense.yaw;
-            imu_msg.angular_rate       = msg_navsense.zAngRate;
+            //~ midgimu_msg.heading        = msg_navsense.yaw;
+            midgimu_msg.angular_rate       = msg_navsense.zAngRate;
             break;
 
         case MIDG_MESSAGE_UTCTIME:
 //            ROS_INFO("midg_message_utctime");
             msg_utctime = msg_temp.handle_msg_UTCTIME();
 
-            imu_msg.gps_time = ( msg_utctime.timestamp - 15 );
-            navSatFix_msg.header.stamp = ros::Time( imu_msg.gps_time );
+            midgimu_msg.gps_time = ( msg_utctime.timestamp - 15 );
+            navSatFix_msg.header.stamp = ros::Time( midgimu_msg.gps_time );
             break;
 
         case MIDG_MESSAGE_NAVHDGDATA:
@@ -295,8 +301,8 @@ void Process_MIDG_Packets( int fd )
                 //~ msg_navhdg.magHeading -= 2*M_PI;
             //~ }
 //~ 
-            //~ imu_msg.heading = msg_navhdg.magHeading;
-            imu_msg.speed = msg_navhdg.sog;
+            //~ midgimu_msg.heading = msg_navhdg.magHeading;
+            midgimu_msg.speed = msg_navhdg.sog;
             break;
 
 	case MIDG_MESSAGE_IMUMAG:
@@ -321,11 +327,11 @@ void Process_MIDG_Packets( int fd )
 			{			
 				heading -= 2*M_PI;
 			}
-			//imu_msg.heading = avg_mag_x;
-			//imu_msg.gps_time = avg_mag_y;
+			//midgimu_msg.heading = avg_mag_x;
+			//midgimu_msg.gps_time = avg_mag_y;
 			avg_mag_x = 0;
 			avg_mag_y = 0;
-			imu_msg.heading = heading;
+			midgimu_msg.heading = heading;
 		}	
 		
 		break;

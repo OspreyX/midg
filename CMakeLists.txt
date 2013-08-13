@@ -29,6 +29,6 @@ rosbuild_genmsg()
 #rosbuild_add_executable(example examples/example.cpp)
 #target_link_libraries(example ${PROJECT_NAME})
 
-rosbuild_find_ros_package(mst_common)
-INCLUDE_DIRECTORIES(${mst_common_PACKAGE_PATH}/include)
+#rosbuild_find_ros_package(mst_common)
+#INCLUDE_DIRECTORIES(${mst_common_PACKAGE_PATH}/include)
 rosbuild_add_executable(Midg src/Midg_II.cpp src/drivers/midgPacket.cpp)
