@@ -1,5 +1,0 @@
-<launch>
-	<group >
-		<node pkg="MST_Edge_Detection" type="Edge_Detection" name="Edge_Detection" args= "image:=ptgrey/image_raw" />
-	</group>
-</launch>

@@ -1,3 +1,0 @@
-<launch>
-    <node pkg="MST_JAUS" type="jaus_node" name="jaus_node" />
-</launch>
