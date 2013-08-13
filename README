@@ -1,0 +1,5 @@
+A driver for the Microbotics Midg II GPS/IMU sensor.  This driver was plucked from the larger
+Jomegratron_IGVC package, available from here at this writing:
+
+
+https://github.com/MST-Robotics/Jomegatron_IGVC
