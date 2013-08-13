@@ -1,6 +1,0 @@
-#ifndef MIDG_II_H
-#define MIDG_II_H
-
-#include "Configure.h"
-
-#endif
