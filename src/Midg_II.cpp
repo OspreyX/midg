@@ -94,11 +94,11 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "Midg");
     ros::NodeHandle n;
 
-    ros::Publisher midgimu_pub = n.advertise<midg::IMU>( "/midg/midg", 1000 );
-    ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>( "/midg/imu", 1000 );
-    ros::Publisher navSatFix_pub = n.advertise<sensor_msgs::NavSatFix>( "/midg/fix", 1000 );
-    imu_msg.header.frame_id = "imu_link";
+    ros::Publisher midgimu_pub = n.advertise<midg::IMU>( "/midg", 1000 );
+    ros::Publisher imu_pub = n.advertise<sensor_msgs::Imu>( "/imu", 1000 );
+    ros::Publisher navSatFix_pub = n.advertise<sensor_msgs::NavSatFix>( "/fix", 1000 );
     
+    imu_msg.header.frame_id = "imu_link";
     navSatFix_msg.header.frame_id = "midg_link";
 
     // Grab the port name from the launch file.
@@ -111,7 +111,6 @@ int main(int argc, char **argv)
 
     while( ros::ok() )
     {
-//        ROS_DEBUG("Midg alive!");
         Process_MIDG_Packets( fd );
 
         imu_msg.header.stamp = ros::Time::now();
@@ -120,7 +119,6 @@ int main(int argc, char **argv)
         imu_pub.publish( imu_msg );
         navSatFix_pub.publish( navSatFix_msg );
     }
-
 }
 
 int Open_MIDG_Connection()
@@ -150,7 +148,7 @@ int Open_MIDG_Connection()
     tcsetattr(fd,TCSANOW,&newtio);
 
     return fd;
-} /* Start_MIDG_Connection() */
+}
 
 void Process_MIDG_Packets( int fd )
 {
@@ -166,12 +164,13 @@ void Process_MIDG_Packets( int fd )
 
     const unsigned int sample_size = 10;
 
-    //ROS_INFO("getonepacket");
+    ROS_DEBUG("getonepacket");
     midgPacket msg_temp = getonepacket( fd );
+
     switch( msg_temp.messageID )
     {
         case MIDG_MESSAGE_NAVPVDATA:
-            //ROS_INFO("midg_message_navpvdata");
+            ROS_DEBUG("midg_message_navpvdata");
             msg_navpv = msg_temp.handle_msg_NAVPV();
 
             if( !msg_navpv.positionvalid )
@@ -214,7 +213,7 @@ void Process_MIDG_Packets( int fd )
             break;
 
         case MIDG_MESSAGE_GPSPVDATA:
-            //ROS_INFO("midg_message_gpspvdata");
+            ROS_DEBUG("midg_message_gpspvdata");
             msg_gpspv = msg_temp.handle_msg_GPSPV();
 
             if( !msg_gpspv.gpsfixvalid )
@@ -270,7 +269,7 @@ void Process_MIDG_Packets( int fd )
             break;
 
         case MIDG_MESSAGE_NAVSENSEDATA:
-            //ROS_INFO("midg_message_navsensedata");
+            ROS_DEBUG("midg_message_navsensedata");
             msg_navsense = msg_temp.handle_msg_NAVSENSE();
 
             //~ //------------------------------------------------------
@@ -303,27 +302,26 @@ void Process_MIDG_Packets( int fd )
             //~ midgimu_msg.heading = msg_navsense.yaw;
             midgimu_msg.angular_rate = msg_navsense.zAngRate;
 
-            // Convert from NED to ENU, and publish
-            imu_msg.angular_velocity.x = -( msg_navsense.yAngRate ); // convert from left-hand to right-hand rule
+            // Convert angular velocity from NED to ENU
+            imu_msg.angular_velocity.x = msg_navsense.yAngRate;
             imu_msg.angular_velocity.y = msg_navsense.xAngRate;
             imu_msg.angular_velocity.z = -( msg_navsense.zAngRate );
 
-            // Convert from NED to ENU, and publish
+            // Convert acceleration from NED to ENU
             imu_msg.linear_acceleration.x = msg_navsense.yAccel / g;
             imu_msg.linear_acceleration.y = msg_navsense.xAccel / g;
             imu_msg.linear_acceleration.z = -( msg_navsense.zAccel / g );
 
-            // Convert from NED to ENU, and publish
+            // Convert orientation from NED to ENU
             imu_msg.orientation.x = msg_navsense.Qy;
             imu_msg.orientation.y = msg_navsense.Qx;
             imu_msg.orientation.z = -( msg_navsense.Qz );
             imu_msg.orientation.w = msg_navsense.Qw;
 
-
             break;
 
         case MIDG_MESSAGE_UTCTIME:
-//            ROS_INFO("midg_message_utctime");
+            ROS_DEBUG("midg_message_utctime");
             msg_utctime = msg_temp.handle_msg_UTCTIME();
 
             midgimu_msg.gps_time = ( msg_utctime.timestamp - 15 );
@@ -331,7 +329,7 @@ void Process_MIDG_Packets( int fd )
             break;
 
         case MIDG_MESSAGE_NAVHDGDATA:
-            //ROS_INFO("midg_message_navhdgdata");
+            ROS_DEBUG("midg_message_navhdgdata");
             msg_navhdg = msg_temp.handle_msg_NAVHDG();
             
             //~ msg_navhdg.magHeading *= (M_PI/180);
@@ -354,7 +352,7 @@ void Process_MIDG_Packets( int fd )
             //~ {
                 //~ msg_navhdg.magHeading -= 2*M_PI;
             //~ }
-//~ 
+ 
             //~ midgimu_msg.heading = msg_navhdg.magHeading;
             midgimu_msg.speed = msg_navhdg.sog;
             break;
@@ -390,7 +388,7 @@ void Process_MIDG_Packets( int fd )
 		
 		break;
     default:
-            //ROS_INFO("default message");
+            ROS_DEBUG("Midg default message");
         break;
     } /* switch( msg_temp.messageID ) */
 }  /* Process_MIDG_Packets() */
