@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cmath>
 #include <cassert>
+#include <unistd.h>
 using namespace std;
 
 #include <ros/ros.h>
@@ -16,13 +17,13 @@ unsigned char count=1;
 bool found = false;
 unsigned char next_char=0x00;
     while( count && ! found ){
-        ROS_INFO( "gop loop 1" );
+        ROS_DEBUG_NAMED("driver", "gop loop 1" );
         count = read(fd, &next_char, 1 );
         if( count && next_char == 0x81 ){
-            ROS_INFO( "gop loop 2" );
+            ROS_DEBUG_NAMED("driver", "gop loop 2" );
             count = read(fd, &next_char, 1 );
             if( count && next_char == 0xA1 ){
-                ROS_INFO( "gop loop 3" );
+                ROS_DEBUG_NAMED("driver", "gop loop 3" );
                 midgPacket p( fd );
                 if( p.passesChecksum( ) ){
 
@@ -30,6 +31,7 @@ unsigned char next_char=0x00;
                 }
             }
         }
+        usleep(1000);
     }
     exit(0);
 }
@@ -44,15 +46,15 @@ bool found = false;
 
 while( count && !found)
         {
-        ROS_INFO("midgpacket loop 1");
+        ROS_DEBUG_NAMED("driver", "midgpacket loop 1");
         count = read(fd, &next_char, 1 );
         if( count && next_char == 0x81 )
                 {
-                ROS_INFO("midgpackget loop 2");
+                ROS_DEBUG_NAMED("driver", "midgpackget loop 2");
                 count = read(fd, &next_char, 1 );
                 if( count && next_char == 0xA1 )
                         {
-                        ROS_INFO("midgpacket loop 3");
+                        ROS_DEBUG_NAMED("driver", "midgpacket loop 3");
                         found = init(fd);
                         }
                 }

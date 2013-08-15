@@ -102,7 +102,8 @@ int main(int argc, char **argv)
     navSatFix_msg.header.frame_id = "midg_link";
 
     // Grab the port name from the launch file.
-    n.param<std::string>("port", port_name, "/dev/ttyUSB0");
+    //n.param<std::string>("port", port_name, "/dev/ttyUSB0");
+    ros::param::param<std::string>("~port", port_name, "/dev/ttyUSB0");
 
     /***********************************************************
     * Midg initialization
