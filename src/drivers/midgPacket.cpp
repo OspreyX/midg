@@ -16,7 +16,7 @@ midgPacket getonepacket( int fd )
 unsigned char count=1;
 bool found = false;
 unsigned char next_char=0x00;
-    while( count && ! found ){
+    while( count && ! found ) {
         ROS_DEBUG_NAMED("driver", "gop loop 1" );
         count = read(fd, &next_char, 1 );
         if( count && next_char == 0x81 ){
@@ -26,12 +26,11 @@ unsigned char next_char=0x00;
                 ROS_DEBUG_NAMED("driver", "gop loop 3" );
                 midgPacket p( fd );
                 if( p.passesChecksum( ) ){
-
                     return p;
                 }
             }
         }
-        usleep(1000);
+        //usleep(1000);  //the driver consumes fewer cycles when no data is available.
     }
     exit(0);
 }
@@ -44,8 +43,7 @@ unsigned char count = 1;
 unsigned char next_char = 0x00;
 bool found = false;
 
-while( count && !found)
-        {
+while( count && !found) {
         ROS_DEBUG_NAMED("driver", "midgpacket loop 1");
         count = read(fd, &next_char, 1 );
         if( count && next_char == 0x81 )
@@ -623,6 +621,7 @@ msg_UTCTIME midgPacket::handle_msg_UTCTIME()
 
     return buffer;
 }
+
 /*
 void send_msg_AIDVEL( int fd, msg_AIDVEL input )
 {

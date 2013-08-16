@@ -102,7 +102,6 @@ int main(int argc, char **argv)
     navSatFix_msg.header.frame_id = "midg_link";
 
     // Grab the port name from the launch file.
-    //n.param<std::string>("port", port_name, "/dev/ttyUSB0");
     ros::param::param<std::string>("~port", port_name, "/dev/ttyUSB0");
 
     /***********************************************************
@@ -130,7 +129,10 @@ int Open_MIDG_Connection()
     int fd;
     struct termios newtio;
 
-    fd = open(port_name.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK );
+    tcgetattr(fd, &newtio); //NEW CODE
+
+    //fd = open(port_name.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK );
+    fd = open(port_name.c_str(), O_RDWR | O_NOCTTY );
     if (fd <0) {perror(port_name.c_str()); exit(-1); }
 
     memset( &newtio, 0x00, sizeof(newtio) );
@@ -141,15 +143,31 @@ int Open_MIDG_Connection()
     newtio.c_lflag = 0 & !ECHO;
 
     /* set input mode (non-canonical, no echo,...) */
-    newtio.c_lflag = 0;
+    //newtio.c_lflag = 0;
+    newtio.c_lflag &= ~ICANON;  //NEW CODE
 
-    newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
+    //newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */  //NEW CODE
+    newtio.c_cc[VTIME]    = 1.0;   /* inter-character timer unused */
     newtio.c_cc[VMIN]     = 250; /* blocking read until 1 chars received */
 
-    tcsetattr(fd,TCSANOW,&newtio);
+    tcsetattr(fd, TCSANOW, &newtio);
 
     return fd;
 }
+
+
+
+/*
+tcgetattr(filedesc, &termios);
+termios.c_lflag &= ~ICANON; // Set non-canonical mode
+termios.c_cc[VTIME] = 100; // Set timeout of 10.0 seconds
+tcsetattr(filedesc, TCSANOW, &termios);
+*/
+
+
+
+
+
 
 void Process_MIDG_Packets( int fd )
 {
@@ -391,5 +409,5 @@ void Process_MIDG_Packets( int fd )
     default:
             ROS_DEBUG("Midg default message");
         break;
-    } /* switch( msg_temp.messageID ) */
+    }  /* switch( msg_temp.messageID ) */
 }  /* Process_MIDG_Packets() */
