@@ -30,7 +30,6 @@ unsigned char next_char=0x00;
                 }
             }
         }
-        //usleep(1000);  //the driver consumes fewer cycles when no data is available.
     }
     exit(0);
 }

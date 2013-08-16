@@ -126,12 +126,12 @@ int Open_MIDG_Connection()
     //------------------------------------------------------------------
     // Create serial socket port
     //------------------------------------------------------------------
+
     int fd;
     struct termios newtio;
 
-    tcgetattr(fd, &newtio); //NEW CODE
+    tcgetattr(fd, &newtio);
 
-    //fd = open(port_name.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK );
     fd = open(port_name.c_str(), O_RDWR | O_NOCTTY );
     if (fd <0) {perror(port_name.c_str()); exit(-1); }
 
@@ -142,11 +142,9 @@ int Open_MIDG_Connection()
     newtio.c_oflag = 0;
     newtio.c_lflag = 0 & !ECHO;
 
-    /* set input mode (non-canonical, no echo,...) */
-    //newtio.c_lflag = 0;
-    newtio.c_lflag &= ~ICANON;  //NEW CODE
+    /* set input mode */
+    newtio.c_lflag &= ~ICANON;
 
-    //newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */  //NEW CODE
     newtio.c_cc[VTIME]    = 1.0;   /* inter-character timer unused */
     newtio.c_cc[VMIN]     = 250; /* blocking read until 1 chars received */
 
@@ -154,19 +152,6 @@ int Open_MIDG_Connection()
 
     return fd;
 }
-
-
-
-/*
-tcgetattr(filedesc, &termios);
-termios.c_lflag &= ~ICANON; // Set non-canonical mode
-termios.c_cc[VTIME] = 100; // Set timeout of 10.0 seconds
-tcsetattr(filedesc, TCSANOW, &termios);
-*/
-
-
-
-
 
 
 void Process_MIDG_Packets( int fd )
